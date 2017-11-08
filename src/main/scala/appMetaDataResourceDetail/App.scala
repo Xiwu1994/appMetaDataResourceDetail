@@ -1,7 +1,7 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.log4j.{Level, Logger}
 import org.json4s.native.Json
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{Row, SQLContext}
 import org.json4s.DefaultFormats
 
 object appMetaDataResourceDetail {
@@ -22,6 +22,10 @@ object appMetaDataResourceDetail {
     dim_meta_data_resource_db_file_path = "hdfs://xxxx";
     dim_meta_data_resource_table_file_path = "hdfs://xxxx";
     dim_meta_data_resource_column_file_path = "hdfs://xxxx";
+  }
+
+  def get_value(line: Row, key: String): String = {
+    return line.get(line.fieldIndex(key)).toString
   }
 
   def main(args: Array[String]): Unit = {
@@ -84,44 +88,45 @@ object appMetaDataResourceDetail {
     // 1、return app_db_info
     val select_db_sql = "select * from dim_meta_data.dim_meta_data_resource_db where p_day = '2017-11-08'"
     val app_meta_data_resource_db = sqlContext.sql(select_db_sql).rdd.map{ line =>
-      val resource_name = line.get(line.fieldIndex("db_name"))
+      val resource_name = get_value(line, "db_name")
       val resource_type = "db"
       val data_value = Map(
-        "gdid"->line.get(line.fieldIndex("gdid")),
-        "name"->line.get(line.fieldIndex("db_name")),
+        "gdid"->get_value(line,"gdid"),
+        "name"->get_value(line,"db_name"),
         "tags"->List(),
         "type"->"database",
-        "store_engine"->line.get(line.fieldIndex("db_engine")),
-        "database"->line.get(line.fieldIndex("db_name")),
-        "online_status"->line.get(line.fieldIndex("status")),
-        "level"->line.get(line.fieldIndex("db_level")),
-        "description"->line.get(line.fieldIndex("db_comment")),
+        "store_engine"->get_value(line,"db_engine"),
+        "database"->get_value(line,"db_name"),
+        "online_status"->get_value(line,"status"),
+        "level"->get_value(line,"db_level"),
+        "description"->get_value(line,"db_comment"),
         "creator_name"->null,
-        "owner_name"->line.get(line.fieldIndex("owner_name")),
+        "owner_name"->get_value(line,"owner_name"),
         "updater_name"->null,
         "create_time"->null,
         "update_time"->null,
         "space_used"->null,
-        "table_count"->line.get(line.fieldIndex("table_number"))
+        "table_count"->get_value(line,"table_number")
       )
       val json_str = Json(DefaultFormats).write(Map("data"->data_value))
       // return
-      line.get(line.fieldIndex("gdid")) + "\t" + line.get(line.fieldIndex("gdid_md5")) + "\t" + resource_name +
-        "\t" + resource_type + "\t" + line.get(line.fieldIndex("category")) + "\t" + json_str
+      get_value(line,"gdid") + "\t" + get_value(line,"gdid_md5") + "\t" + resource_name +
+        "\t" + resource_type + "\t" + get_value(line,"category") + "\t" + json_str
     }
 
     // 2、return app_table_info
-    val column_rdd = sc.textFile(dim_meta_data_resource_column_file_path).map { line =>
-      val Array(gdid, gdid_md5, db_gdid, db_engine, db_name, table_gdid, table_name, column_name,
-      column_type, column_comment, category, is_nullable, character_set_name, host_name, port,
-      column_default, collation_name, ordinal_position, column_index,
-      is_partition_column, is_index_column, p_day) = line.split("\t")
+    val select_column_sql = "select * from dim_meta_data.dim_meta_data_resource_column where p_day = '2017-11-08'"
+    val column_rdd = sqlContext.sql(select_column_sql).rdd.cache()
+    val column_group_by_rdd = column_rdd.map{ line =>
+      val db_engine = get_value(line,"db_engine")
       val col_index = db_engine match {
-        case "hive" => column_index
-        case "mysql" => ordinal_position
+        case "hive" => get_value(line,"column_index")
+        case "mysql" => get_value(line,"ordinal_position")
         case _ => null
       }
-      (table_gdid, column_name + "#" + column_comment + "#" + column_type + "#" + is_partition_column + "#" + col_index)
+      (get_value(line,"table_gdid"), get_value(line,"column_name") + "#" +
+        get_value(line,"column_comment") + "#" + get_value(line,"column_type") + "#" +
+        get_value(line,"is_partition_column") + "#" + col_index)
     }.groupByKey().map { line =>
       var column_list: List[Map[String,String]] = List()
       var partition_column_list: List[Map[String,String]] = List()
@@ -139,45 +144,42 @@ object appMetaDataResourceDetail {
       // return table_name, column_info(column_list + partition_column_list)
     }
 
-    sc.textFile(dim_meta_data_resource_table_file_path).map { line =>
-      val table_gdid = line.split("\t")(0)
-      (table_gdid, line)
-    }.join(column_rdd)
-      .map { line =>
-      // line: (table_gdid, (table_info, column_info))
-
-      // a. process table_info
-      val Array(gdid,gdid_md5,db_gdid,db_engine,db_name,table_name,table_type,table_rows,table_cols,table_comment,
-      create_time,update_time,category,data_length,table_collation,host_name,port,engine,status,owner_name,
-      table_store_type,table_location_uri,is_compressed,compress_format,is_partioned,partion_columns,
-      field_delimiter,num_files,raw_data_size,total_size,p_day) = line._2._1.split("\t")
-      val resource_name = table_name
+    val select_table_sql = "select * from dim_meta_data.dim_meta_data_resource_table where p_day = '2017-11-08'"
+    sqlContext.sql(select_table_sql).rdd.map{ line =>
+      val table_gdid = get_value(line, "gdid")
+      val resource_name = get_value(line, "table_name")
       val resource_type = "table"
-      val space_used = db_engine match {
-        case "hive" => total_size
-        case "mysql" => data_length
+      val space_used = get_value(line, "db_engine") match {
+        case "hive" => get_value(line, "total_size")
+        case "mysql" => get_value(line, "data_length")
         case _ => null
       }
+      val data_value = Map(
+        "gdid"->get_value(line, "gdid"),
+        "name"->get_value(line, "table_name"),
+        "tags"->List(),
+        "type"->"table",
+        "store_engine"->get_value(line, "db_engine"),
+        "database"->get_value(line, "db_name"),
+        "online_status"->get_value(line, "status"),
+        "level"->null,
+        "description"->get_value(line, "table_comment"),
+        "creator_name"->null,
+        "owner_name"->get_value(line, "owner_name"),
+        "updater_name"->null,
+        "create_time"->get_value(line, "create_time"),
+        "update_time"->get_value(line, "update_time"),
+        "space_used"->space_used,
+        "column_count"->get_value(line, "table_cols")
+      )
+      (table_gdid, resource_name+"#"+resource_type+"#"+Json(DefaultFormats).write(data_value))
+    }.join(column_group_by_rdd).map { line =>
+      // line: (table_gdid, (table_info, column_info))
+
       // b. process column_info
       val Array(column_list_str, partition_column_list_str) = line._2._2.split("#")
 
       val data_value = Map(
-        "gdid"->gdid,
-        "name"->table_name,
-        "tags"->List(),
-        "type"->"table",
-        "store_engine"->db_engine,
-        "database"->db_name,
-        "online_status"->status,
-        "level"->null,
-        "description"->table_comment,
-        "creator_name"->null,
-        "owner_name"->owner_name,
-        "updater_name"->null,
-        "create_time"->create_time,
-        "update_time"->update_time,
-        "space_used"->space_used,
-        "column_count"->table_cols,
         "columns"->column_list_str,
         "partitions"->partition_column_list_str
       )
