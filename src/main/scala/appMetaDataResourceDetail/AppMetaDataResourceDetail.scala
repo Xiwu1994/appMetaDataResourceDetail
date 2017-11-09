@@ -89,7 +89,7 @@ object AppMetaDataResourceDetail {
         // return
         gdid + "\t" + gdid_md5 + "\t" + resource_name + "\t" + resource_type + "\t" + category + "\t" + json_str
       })
-    })
+    }).cache()
 
     // 2、return app_info_table
     val select_column_sql = s"select * from dim_meta_data.dim_meta_data_resource_column where p_day = '$today'"
@@ -130,7 +130,7 @@ object AppMetaDataResourceDetail {
         // return table_name, column_info(column_list + partition_column_list)
         (line._1, column_list_json_str + "#" + partition_column_list_json_str)
       })
-    })
+    }).cache()
 
     val select_table_sql = s"select * from dim_meta_data.dim_meta_data_resource_table where p_day = '$today'"
     val table_info_key = Seq("category", "gdid_md5", "table_name", "db_engine", "total_size", "data_length",
@@ -189,7 +189,7 @@ object AppMetaDataResourceDetail {
         table_info_map("gdid") + "\t" + table_info_map("gdid_md5") + "\t" + resource_name + "\t" +
           resource_type + "\t" + table_info_map("category") + "\t" + json_str
       })
-    })
+    }).cache()
 
     // 3. return app_info_column
     // select column_name, column_info from column_form
@@ -219,7 +219,7 @@ object AppMetaDataResourceDetail {
         gdid + "\t" + gdid_md5 + "\t" + resource_name + "\t" + resource_type + "\t" +
           get_value(line, "category") + "\t" + json_str
       })
-    })
+    }).cache()
 
     /*
       insert overwrite table app_meta_data_resource_detail
