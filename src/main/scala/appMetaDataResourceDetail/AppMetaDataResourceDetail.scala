@@ -2,13 +2,11 @@ package appMetaDataResourceDetail
 
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{Row, SQLContext, SaveMode, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.json4s.DefaultFormats
-import org.json4s.native.Json
-
+import org.json4s.jackson.Json
 import scala.collection.mutable.HashMap
 
 object AppMetaDataResourceDetail {
@@ -46,7 +44,7 @@ object AppMetaDataResourceDetail {
 
   def main(args: Array[String]): Unit = {
     //设置master为local，用来进行本地调试
-    val spark = SparkSession.builder().appName("appMetaDataResourceDetail").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("appMetaDataResourceDetail").getOrCreate()
     val sqlContext = spark.sqlContext
     import sqlContext.implicits._
     // 1、return app_info_db
