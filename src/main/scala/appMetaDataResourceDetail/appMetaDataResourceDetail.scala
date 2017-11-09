@@ -1,11 +1,15 @@
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.{Row, SQLContext, SaveMode}
-import org.json4s.DefaultFormats
-import org.json4s.native.Json
-import scala.collection.mutable.HashMap
+package appMetaDataResourceDetail
+
 import java.text.SimpleDateFormat
 import java.util.Date
+
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.sql.{Row, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
+import org.json4s.DefaultFormats
+import org.json4s.native.Json
+
+import scala.collection.mutable.HashMap
 
 object appMetaDataResourceDetail {
   Logger.getLogger("org").setLevel(Level.WARN)
