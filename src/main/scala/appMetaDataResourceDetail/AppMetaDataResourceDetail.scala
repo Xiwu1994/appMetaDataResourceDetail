@@ -58,6 +58,7 @@ object AppMetaDataResourceDetail {
     // 1、return app_info_db
     val today = getNowDate()
     val select_db_sql = s"select * from dim_meta_data.dim_meta_data_resource_db where p_day = '$today'"
+    // select db_name, db_info from db_form
     val app_res_db = sqlContext.sql(select_db_sql).rdd.mapPartitions( partition => {
       partition.map( line => {
         val gdid = get_value(line, "gdid")
@@ -93,6 +94,7 @@ object AppMetaDataResourceDetail {
     // 2、return app_info_table
     val select_column_sql = s"select * from dim_meta_data.dim_meta_data_resource_column where p_day = '$today'"
     val column_rdd = sqlContext.sql(select_column_sql).rdd.cache()
+    // column_group_by_rdd: select table_name, column_info(Map) from column_form group by table_name
     val column_group_by_rdd = column_rdd.mapPartitions( partition => {
       partition.map(line => {
         val db_engine = get_value(line, "db_engine")
@@ -134,6 +136,7 @@ object AppMetaDataResourceDetail {
     val table_info_key = Seq("category", "gdid_md5", "table_name", "db_engine", "total_size", "data_length",
       "db_name", "status", "table_comment", "owner_name", "create_time", "update_time", "table_cols", "gdid")
 
+    // app_res_table: select table_name, table_info, column_info(Map) from table_form join column_group_by_rdd on table_name=table_name
     val app_res_table = sqlContext.sql(select_table_sql).rdd.mapPartitions( partition => {
       partition.map(line => {
         var table_info_value = Seq[String]()
@@ -189,6 +192,7 @@ object AppMetaDataResourceDetail {
     })
 
     // 3. return app_info_column
+    // select column_name, column_info from column_form
     val app_res_column = column_rdd.mapPartitions( partition => {
       partition.map(line => {
         val gdid = get_value(line, "gdid")
@@ -216,7 +220,15 @@ object AppMetaDataResourceDetail {
           get_value(line, "category") + "\t" + json_str
       })
     })
-    // insert app
+
+    /*
+      insert overwrite table app_meta_data_resource_detail
+      select resource_id, resource_info from db_res
+      union all
+      select resource_id, resource_info from table_res
+      union all
+      select resource_id, resource_info from column_res
+     */
     app_res_db.union(app_res_table).union(app_res_column).mapPartitions(partition => {partition.map(_.split("\t"))})
       .mapPartitions(partition => {
         partition.map(e => {
