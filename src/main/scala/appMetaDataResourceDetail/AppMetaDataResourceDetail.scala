@@ -235,7 +235,7 @@ object AppMetaDataResourceDetail {
           app_meta_data_resource_detail(e(0), e(1), e(2), e(3), e(4), e(5), today)
         })
       }).toDF().write
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .format("parquet")
       .partitionBy("p_day")
       .saveAsTable("app_meta_data.app_meta_data_resource_detail")
