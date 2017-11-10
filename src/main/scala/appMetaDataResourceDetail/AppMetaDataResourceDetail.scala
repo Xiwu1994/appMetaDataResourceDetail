@@ -235,9 +235,9 @@ object AppMetaDataResourceDetail {
           app_meta_data_resource_detail(e(0), e(1), e(2), e(3), e(4), e(5), today)
         })
       }).toDF().write
-      .partitionBy("p_day")
       .mode(SaveMode.Overwrite)
-      .format("parquet")
-      .saveAsTable("app_meta_data.app_meta_data_resource_detail")
+      //.format("parquet")
+      .parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
+      //.saveAsTable("app_meta_data.app_meta_data_resource_detail")
   }
 }
