@@ -238,7 +238,8 @@ object AppMetaDataResourceDetail {
       .mode(SaveMode.Overwrite)
       .partitionBy("p_day")
       .format("parquet")
-      .insertInto(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
+      .insertInto("app_meta_data.app_meta_data_resource_detail")
+      //.parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
       //.saveAsTable("app_meta_data.app_meta_data_resource_detail")
   }
 }
