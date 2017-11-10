@@ -236,10 +236,16 @@ object AppMetaDataResourceDetail {
         })
       }).toDF().write
       .mode(SaveMode.Overwrite)
-      //.partitionBy("p_day")
-      .format("parquet")
-      .insertInto("app_meta_data.app_meta_data_resource_detail")
-      //.parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
-      //.saveAsTable("app_meta_data.app_meta_data_resource_detail")
+//      .partitionBy("p_day")
+//      .format("parquet")
+//      .insertInto("app_meta_data.app_meta_data_resource_detail")
+//      .saveAsTable("app_meta_data.app_meta_data_resource_detail")
+      // PS. saveAsTable Or insertInto + partitionBy + OverwirteMode 会删除所有分区
+      .parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
+
+
+    val add_partition_sql = s"ALTER TABLE app_meta_data.app_meta_data_resource_detail ADD IF NOT EXISTS PARTITION (p_day=$today) " +
+      s"location '/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today'"
+    sqlContext.sql(add_partition_sql)
   }
 }
