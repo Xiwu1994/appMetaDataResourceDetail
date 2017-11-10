@@ -244,7 +244,7 @@ object AppMetaDataResourceDetail {
       .parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
 
 
-    val add_partition_sql = s"ALTER TABLE app_meta_data.app_meta_data_resource_detail ADD IF NOT EXISTS PARTITION (p_day=$today) " +
+    val add_partition_sql = s"ALTER TABLE app_meta_data.app_meta_data_resource_detail ADD IF NOT EXISTS PARTITION (p_day='$today') " +
       s"location '/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today'"
     sqlContext.sql(add_partition_sql)
   }
