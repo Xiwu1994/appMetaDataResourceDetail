@@ -236,8 +236,9 @@ object AppMetaDataResourceDetail {
         })
       }).toDF().write
       .mode(SaveMode.Overwrite)
-      //.format("parquet")
-      .parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
+      .partitionBy("p_day")
+      .format("parquet")
+      .insertInto(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
       //.saveAsTable("app_meta_data.app_meta_data_resource_detail")
   }
 }
