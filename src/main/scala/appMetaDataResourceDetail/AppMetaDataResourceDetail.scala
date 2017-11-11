@@ -243,6 +243,11 @@ object AppMetaDataResourceDetail {
       // PS. saveAsTable Or insertInto + partitionBy + OverwirteMode 会删除所有分区
       .parquet(s"/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today")
 
+    app_res_db.unpersist()
+    column_rdd.unpersist()
+    column_group_by_rdd.unpersist()
+    app_res_table.unpersist()
+    app_res_column.unpersist()
 
     val add_partition_sql = s"ALTER TABLE app_meta_data.app_meta_data_resource_detail ADD IF NOT EXISTS PARTITION (p_day='$today') " +
       s"location '/user/hive/warehouse/app_meta_data.db/app_meta_data_resource_detail/p_day=$today'"
