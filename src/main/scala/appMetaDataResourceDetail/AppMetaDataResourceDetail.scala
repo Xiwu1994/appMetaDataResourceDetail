@@ -26,7 +26,7 @@ object AppMetaDataResourceDetail {
     * 对于Row 输入key 输出对应value*/
     val value = line.get(line.fieldIndex(key))
     if (value == null){
-      return null
+      return "NULL"
     } else {
       return line.get(line.fieldIndex(key)).toString
     }
@@ -76,12 +76,12 @@ object AppMetaDataResourceDetail {
           "online_status" -> get_value(line, "status"),
           "level" -> get_value(line, "db_level"),
           "description" -> get_value(line, "db_comment"),
-          "creator_name" -> null,
+          "creator_name" -> "NULL",
           "owner_name" -> get_value(line, "owner_name"),
-          "updater_name" -> null,
-          "create_time" -> null,
-          "update_time" -> null,
-          "space_used" -> null,
+          "updater_name" -> "NULL",
+          "create_time" -> "NULL",
+          "update_time" -> "NULL",
+          "space_used" -> "NULL",
           "table_count" -> get_value(line, "table_number")
         )
         val json_str = Json(DefaultFormats).write(Map("data" -> data_value))
@@ -101,7 +101,7 @@ object AppMetaDataResourceDetail {
         val col_index = db_engine match {
           case "hive" => get_value(line, "column_index")
           case "mysql" => get_value(line, "ordinal_position")
-          case _ => null
+          case _ => "NULL"
         }
         (get_value(line, "table_gdid"), get_value(line, "column_name") + "#" +
           get_value(line, "column_comment") + "#" + get_value(line, "column_type") + "#" +
@@ -163,7 +163,7 @@ object AppMetaDataResourceDetail {
         val space_used = table_info_map("db_engine") match {
           case "hive" => table_info_map("total_size")
           case "mysql" => table_info_map("data_length")
-          case _ => null
+          case _ => "NULL"
         }
         val data_value = Map(
           "gdid" -> table_info_map("gdid"),
@@ -173,11 +173,11 @@ object AppMetaDataResourceDetail {
           "store_engine" -> table_info_map("db_engine"),
           "database" -> table_info_map("db_name"),
           "online_status" -> table_info_map("status"),
-          "level" -> null,
+          "level" -> "NULL",
           "description" -> table_info_map("table_comment"),
-          "creator_name" -> null,
+          "creator_name" -> "NULL",
           "owner_name" -> table_info_map("owner_name"),
-          "updater_name" -> null,
+          "updater_name" -> "NULL",
           "create_time" -> table_info_map("create_time"),
           "update_time" -> table_info_map("update_time"),
           "space_used" -> space_used,
@@ -207,14 +207,14 @@ object AppMetaDataResourceDetail {
           "store_engine" -> get_value(line, "db_engine"),
           "database" -> get_value(line, "db_name"),
           "table" -> get_value(line, "table_name"),
-          "online_status" -> null,
-          "level" -> null,
+          "online_status" -> "NULL",
+          "level" -> "NULL",
           "description" -> get_value(line, "column_comment"),
-          "creator_name" -> null,
-          "owner_name" -> null,
-          "updater_name" -> null,
-          "create_time" -> null,
-          "update_time" -> null
+          "creator_name" -> "NULL",
+          "owner_name" -> "NULL",
+          "updater_name" -> "NULL",
+          "create_time" -> "NULL",
+          "update_time" -> "NULL"
         )
         val json_str = Json(DefaultFormats).write(Map("data" -> data_value))
         gdid + "\t" + gdid_md5 + "\t" + resource_name + "\t" + resource_type + "\t" +
