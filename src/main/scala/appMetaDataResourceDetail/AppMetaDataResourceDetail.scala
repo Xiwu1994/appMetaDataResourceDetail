@@ -206,6 +206,7 @@ object AppMetaDataResourceDetail {
           "type" -> "field",
           "store_engine" -> get_value(line, "db_engine"),
           "database" -> get_value(line, "db_name"),
+          "table" -> get_value(line, "table_name"),
           "online_status" -> null,
           "level" -> null,
           "description" -> get_value(line, "column_comment"),
