@@ -2,11 +2,13 @@ package appMetaDataResourceDetail
 
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.{Row, SQLContext, SaveMode, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.Json
+
 import scala.collection.mutable.HashMap
 
 object AppMetaDataResourceDetail {
@@ -148,7 +150,7 @@ object AppMetaDataResourceDetail {
         //return table_gdid, table_info
         (table_gdid, table_info_value.mkString("#"))
       })
-    }).join(column_group_by_rdd).mapPartitions( partition => {
+    }).leftOuterJoin(column_group_by_rdd).mapPartitions( partition => {
       partition.map(line => {
         // line: (table_gdid, (table_info, column_info))
 
@@ -156,7 +158,11 @@ object AppMetaDataResourceDetail {
         val table_info_value = line._2._1.split("#")
         val table_info_map = getValuesMap(table_info_key, table_info_value)
         // b. process column_info
-        val Array(column_list_str, partition_column_list_str) = line._2._2.split("#")
+        val table_column_info: String = line._2._2 match {
+          case None => "[]#[]"
+          case _ => line._2._2.toString
+        }
+        val Array(column_list_str, partition_column_list_str) = table_column_info.split("#")
 
         val resource_name = table_info_map("table_name")
         val resource_type = "table"
