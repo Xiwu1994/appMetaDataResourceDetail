@@ -71,7 +71,7 @@ object AppMetaDataResourceDetail {
         val data_value = Map(
           "gdid" -> gdid,
           "name" -> get_value(line, "db_name"),
-          "tags" -> List(),
+          "tags" -> List(category),
           "type" -> "database",
           "store_engine" -> get_value(line, "db_engine"),
           "database" -> get_value(line, "db_name"),
@@ -160,7 +160,7 @@ object AppMetaDataResourceDetail {
         // b. process column_info
         val table_column_info: String = line._2._2 match {
           case None => "[]#[]"
-          case _ => line._2._2.toString
+          case Some(value) => value
         }
         val Array(column_list_str, partition_column_list_str) = table_column_info.split("#")
 
@@ -174,7 +174,7 @@ object AppMetaDataResourceDetail {
         val data_value = Map(
           "gdid" -> table_info_map("gdid"),
           "name" -> table_info_map("table_name"),
-          "tags" -> List(),
+          "tags" -> List(table_info_map("category")),
           "type" -> "table",
           "store_engine" -> table_info_map("db_engine"),
           "database" -> table_info_map("db_name"),
@@ -208,7 +208,7 @@ object AppMetaDataResourceDetail {
         val data_value = Map(
           "gdid" -> gdid,
           "name" -> resource_name,
-          "tags" -> List(),
+          "tags" -> List(get_value(line, "category")),
           "type" -> "field",
           "store_engine" -> get_value(line, "db_engine"),
           "database" -> get_value(line, "db_name"),
